@@ -6442,9 +6442,6 @@ def _define_discord_view_classes() -> None:
                     item.label = _t_discord(key, _DISCORD_BUTTON_LABEL_LIMIT)
 
         async def on_timeout(self):
-            # A click already resolved the prompt: keep its "Approved/Denied by" footer.
-            if self.resolved:
-                return
             self.resolved = True
             self._disable_all()
             await self._expire_embed(t("platform.discord.prompt.expired_footer"))
@@ -6661,6 +6658,7 @@ def _define_discord_view_classes() -> None:
             if not await self._gate(interaction, resolved_msg=t("platform.discord.picker.already_resolved"), unauth_msg=_unauthorized()):
                 return
             self.resolved = True
+            self.stop()  # answered: release the view, or its timeout later stamps "expired" over the result
             self.clear_items()
             await self._edit(
                 interaction, t("platform.discord.picker.switching", model=model_id),
@@ -6712,6 +6710,7 @@ def _define_discord_view_classes() -> None:
             if not await self._gate(interaction, resolved_msg=None, unauth_msg=_unauthorized()):
                 return
             self.resolved = True
+            self.stop()
             self.clear_items()
             await self._edit(interaction, t("platform.discord.picker.cancelled"), color=discord.Color.greyple())
 
